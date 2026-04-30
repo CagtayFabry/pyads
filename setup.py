@@ -40,7 +40,12 @@ class CustomBuildPy(build_py):
     def _compile_library():
         """Use `make` to build adslib - build is done in-place."""
         # Produce `adslib.so`:
-        subprocess.call(["make", "-C", "adslib"])
+        os.chdir("adslib")
+        env = os.environ.copy()
+        env["BHF_ADS_EXPORT_C"] = "1"
+        subprocess.call(["meson", "setup", "build"], env=env)
+        subprocess.call(["ninja", "-C", "build"], env=env)
+        os.chdir("..")
 
     @staticmethod
     def _clean_library():
@@ -66,7 +71,7 @@ class CustomBuildPy(build_py):
         if self.compile_adslib():
             # Move .so file from Git submodule into src/ to have it on PATH:
             self.move_file(
-                str(adslib_folder / "adslib.so"),
+                str(adslib_folder / "libadslib.so"),
                 str(adslib_file),
             )
 
